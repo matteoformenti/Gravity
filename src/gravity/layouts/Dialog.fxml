@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import com.jfoenix.controls.JFXButton?>
+<?import com.jfoenix.controls.JFXCheckBox?>
+<?import com.jfoenix.controls.JFXColorPicker?>
+<?import com.jfoenix.controls.JFXDialogLayout?>
+<?import com.jfoenix.controls.JFXTextField?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<Pane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="260.0" prefWidth="500.0" xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1" fx:controller="gravity.Controller">
+   <children>
+      <JFXDialogLayout prefHeight="260.0" prefWidth="500.0">
+         <children>
+            <StackPane>
+               <children>
+                  <ImageView fitHeight="260.0" fitWidth="500.0" pickOnBounds="true">
+                     <image>
+                        <Image url="@../wallhaven-50908.png" />
+                     </image>
+                  </ImageView>
+                  <BorderPane prefHeight="280.0" prefWidth="500.0" StackPane.alignment="CENTER">
+                     <top>
+                        <Label text="Gravity" textFill="WHITE" BorderPane.alignment="CENTER">
+                           <font>
+                              <Font name="Roboto Light" size="30.0" />
+                           </font>
+                        </Label>
+                     </top>
+                     <center>
+                        <VBox BorderPane.alignment="CENTER">
+                           <children>
+                              <JFXTextField fx:id="usernameLabel" focusColor="#ffffff00" promptText="Username" style="-fx-text-fill: #ffffff;" unFocusColor="#2196f3">
+                                 <font>
+                                    <Font name="Roboto Regular" size="13.0" />
+                                 </font>
+                              </JFXTextField>
+                              <HBox>
+                                 <children>
+                                    <JFXTextField fx:id="serverIPLabel" focusColor="#ffffff00" promptText="Server IP" style="-fx-text-fill: #ffffff;" unFocusColor="#2196f3" HBox.hgrow="ALWAYS">
+                                       <font>
+                                          <Font name="Roboto Regular" size="13.0" />
+                                       </font>
+                                    </JFXTextField>
+                                    <JFXCheckBox alignment="CENTER" checkedColor="#2196f3" contentDisplay="CENTER" onAction="#isServerBox" text="This is the server" textAlignment="CENTER" textFill="WHITE" unCheckedColor="WHITE" HBox.hgrow="NEVER">
+                                       <font>
+                                          <Font name="Roboto Regular" size="13.0" />
+                                       </font>
+                                       <HBox.margin>
+                                          <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                                       </HBox.margin>
+                                    </JFXCheckBox>
+                                 </children>
+                                 <VBox.margin>
+                                    <Insets bottom="10.0" top="10.0" />
+                                 </VBox.margin>
+                              </HBox>
+                              <HBox spacing="10.0">
+                                 <VBox.margin>
+                                    <Insets left="10.0" top="10.0" />
+                                 </VBox.margin>
+                                 <children>
+                                    <Label text="Choose color" textFill="WHITE" HBox.hgrow="ALWAYS">
+                                       <font>
+                                          <Font name="Roboto Regular" size="13.0" />
+                                       </font>
+                                       <HBox.margin>
+                                          <Insets top="5.0" />
+                                       </HBox.margin>
+                                    </Label>
+                                    <JFXColorPicker onAction="#chooseColor" prefHeight="25.0" prefWidth="399.0" HBox.hgrow="ALWAYS">
+                                       <HBox.margin>
+                                          <Insets />
+                                       </HBox.margin>
+                                    </JFXColorPicker>
+                                 </children>
+                              </HBox>
+                              <JFXButton alignment="CENTER" onAction="#connect" prefHeight="25.0" prefWidth="490.0" ripplerFill="#2196f3" style="-fx-background-color: #ffffff;" text="Connect">
+                                 <VBox.margin>
+                                    <Insets left="5.0" right="5.0" top="50.0" />
+                                 </VBox.margin>
+                              </JFXButton>
+                           </children>
+                        </VBox>
+                     </center>
+                  </BorderPane>
+               </children>
+            </StackPane>
+         </children>
+         <padding>
+            <Insets bottom="-1.0" left="-1.0" right="-1.0" top="-1.0" />
+         </padding>
+      </JFXDialogLayout>
+   </children>
+</Pane>
