@@ -1,5 +1,4 @@
-.game-grid {
-    -fx-background-color: balck;
-    -fx-border: 1px solid;
-    -fx-border-color: #3F51B5;
+.button:disabled, .button:default:disabled
+{
+    -fx-opacity: 1;
 }

@@ -27,7 +27,7 @@ public class Main extends Application
         stage.show();
     }
 
-    public Controller getController()
+    public static Controller getController()
     {
         return controller;
     }

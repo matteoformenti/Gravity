@@ -1,15 +1,11 @@
 package gravity;
 
-import com.jfoenix.controls.JFXButton;
-import com.jfoenix.controls.JFXDialog;
-import com.jfoenix.controls.JFXDialogLayout;
-import com.jfoenix.controls.JFXTextField;
+import com.jfoenix.controls.*;
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIconView;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.*;
-import javafx.scene.paint.Paint;
 import javafx.stage.Screen;
 
 import java.util.ArrayList;
@@ -31,12 +27,15 @@ public class Controller
     private double x;
     private double y;
     private boolean fullscreen = false;
-    private List<JFXButton> buttons = new ArrayList<>();
+    private List<Cell> cells = new ArrayList<>();
     private List<RowConstraints> rowConstraints = new ArrayList<>();
 
     public void init()
     {
         dialogLayout.setPadding(new Insets(-1));
+        dialog.setTransitionType(JFXDialog.DialogTransition.CENTER);
+        dialog.show(mainPane);
+        dialog.setOverlayClose(false);
         topBar.setOnMousePressed((event) ->
         {
                 if (event.getButton() == MouseButton.PRIMARY) {
@@ -67,6 +66,7 @@ public class Controller
             Main.getStage().setWidth(Screen.getPrimary().getVisualBounds().getWidth());
             Main.getStage().setHeight(Screen.getPrimary().getVisualBounds().getHeight());
             resizeImage.setGlyphName("WINDOW_RESTORE");
+            Main.getStage().centerOnScreen();
             fullscreen = true;
         }
         else
@@ -88,6 +88,7 @@ public class Controller
     {
         dialog.setTransitionType(JFXDialog.DialogTransition.CENTER);
         dialog.show(mainPane);
+        dialog.setOverlayClose(true);
     }
 
     public void populateBoard()
@@ -98,26 +99,36 @@ public class Controller
             grid.getRowConstraints().add(new RowConstraints(30,30,Double.MAX_VALUE));
             for (int c = 0; c < 8; c++)
             {
-                JFXButton button = new JFXButton("");
-                button.setRipplerFill(Paint.valueOf("#3F51B5"));
-                button.setId(r + "-" + c);
-                button.setPrefSize(30,30);
-                button.setOnAction((event) -> System.out.println(event.getSource()));
-                buttons.add(button);
-                grid.add(button, c, r);
+                Cell cell = new Cell(r+""+c);
+                cells.add(cell);
+                grid.add(cell, c, r);
             }
         }
     }
 
     public void isServerBox(ActionEvent actionEvent)
     {
+        JFXCheckBox checkBox = (JFXCheckBox)actionEvent.getSource();
+        if (checkBox.isSelected())
+            serverIPLabel.setDisable(true);
+        else
+            serverIPLabel.setDisable(false);
     }
 
     public void chooseColor(ActionEvent actionEvent)
     {
+        JFXColorPicker picker = (JFXColorPicker)actionEvent.getSource();
+        Settings.localColor = picker.valueProperty().getValue().toString();
+        System.out.println(Settings.localColor);
     }
 
     public void connect(ActionEvent actionEvent)
     {
+        dialog.close();
+    }
+
+    public List<Cell> getCells()
+    {
+        return cells;
     }
 }
