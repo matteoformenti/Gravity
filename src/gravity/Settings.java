@@ -172,28 +172,5 @@ public class Settings
 
     public static void searchWinner(Cell c)
     {
-        if (top(c).getId() != null)
-        {
-            Cell top = top(c);
-            int i = 0;
-            while (top.isLocal())
-            {
-                top = top(top);
-                i++;
-                if (top.getId() == null)
-                    break;
-            }
-            top = bottom(c);
-            while (top.isLocal())
-            {
-                top = bottom(top);
-                i++;
-                if (top.getId() == null)
-                    break;
-            }
-            if (i == 4)
-                System.out.println("hai vinto");
-            System.out.println("numero in fila: "+i);
-        }
     }
 }
