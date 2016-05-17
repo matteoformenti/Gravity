@@ -1,8 +1,6 @@
 package gravity;
 
 import com.jfoenix.controls.JFXButton;
-import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
-import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIconView;
 import javafx.geometry.Insets;
 import javafx.scene.paint.Paint;
 
@@ -17,11 +15,11 @@ public class Cell extends JFXButton
         if (ID != null)
         {
             this.setRipplerFill(Paint.valueOf("#3F51B5"));
-            this.setOnAction((event) -> Settings.cellHandler(this, true));
+            this.setOnAction((event) -> Util.cellHandler(this, true));
             this.setPrefSize(30, 30);
             this.setId(ID);
             this.getStylesheets().add(getClass().getResource("style.css").toExternalForm());
-            Settings.applyGravity(this);
+            Util.applyGravity(this);
         }
     }
 
@@ -32,17 +30,17 @@ public class Cell extends JFXButton
 
     public void setSelected(boolean local)
     {
+        System.out.println(this.getId()+" is now selected");
         this.setPadding(new Insets(-1));
         if (!local)
         {
-            this.setStyle("-fx-background-color: #"+Settings.remoteColor.substring(2,8)+";");
+            this.setStyle("-fx-background-color: #"+ Util.remoteColor.substring(2,8)+";");
             this.local = false;
         }
         else
-            this.setStyle("-fx-background-color: #"+Settings.localColor.substring(2,8)+";");
+            this.setStyle("-fx-background-color: #"+ Util.localColor.substring(2,8)+";");
         this.setDisable(true);
         selected = true;
-        this.getChildren().add(new MaterialDesignIconView(MaterialDesignIcon.CLOSE));
     }
 
 
@@ -59,5 +57,15 @@ public class Cell extends JFXButton
     public void setGravity(int gravity)
     {
         this.gravity = gravity;
+    }
+
+    public String getX()
+    {
+        return this.getId().charAt(0)+"";
+    }
+
+    public String getY()
+    {
+        return this.getId().charAt(1)+"";
     }
 }

@@ -3,6 +3,7 @@ package gravity;
 import java.io.*;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
 
@@ -27,22 +28,22 @@ public class GCP
         match,              //match started
         match_over,         //match finished
         match_error,        //opponent disconnection
-        error               //general error
+        error,              //general error
+        exit,               //disconnect from server
+        move
     }
 
     public GCP()
     {
         try
         {
-            server = new Socket(Settings.serverIP, Settings.serverPort);
-            writer = new PrintWriter(server.getOutputStream());
+            server = new Socket(Util.serverIP, Util.serverPort);
+            writer = new PrintWriter(server.getOutputStream(), true);
             reader = new BufferedReader(new InputStreamReader(server.getInputStream()));
         } catch (UnknownHostException e)
         {
-            e.printStackTrace();
         } catch (IOException e)
         {
-            e.printStackTrace();
         }
     }
 
@@ -51,11 +52,16 @@ public class GCP
         StringTokenizer tokenizer = null;
         try
         {
-            tokenizer = new StringTokenizer(reader.readLine(), DELIMITER);
-            return new Message(Codes.valueOf(tokenizer.nextToken()), tokenizer.nextToken());
+            String in = reader.readLine();
+            System.out.println(in);
+            tokenizer = new StringTokenizer(in, DELIMITER);
+            Codes code = Codes.valueOf(tokenizer.nextToken());
+            String s = "";
+            while (tokenizer.hasMoreTokens())
+                s+=tokenizer.nextToken()+DELIMITER;
+            return new Message(code, s);
         } catch (IOException e)
         {
-            e.printStackTrace();
             return null;
         }
 
@@ -91,31 +97,36 @@ public class GCP
 //        }
     }
 
-    public static boolean login()
+    public static int login()
     {
-        writer.println(messageComposer(Codes.login, Settings.localUser + "|" + Settings.localColor));
-        if (decodeIncoming().code.equals(Codes.login_ok))
-            return true;
-        if (decodeIncoming().code.equals(Codes.login_usr))
-            return false;
-        return false;
+        if (writer == null || reader == null)
+            return -3;
+        writer.println(messageComposer(Codes.login, (Util.localUser + "|" + Util.localColor)));
+        Message m = decodeIncoming();
+        if (m == null)
+            return -3;
+        if (m.code.equals(Codes.login_ok))
+            return 1;
+        if (m.code.equals(Codes.login_usr))
+            return -1;
+        return -2;
     }
 
     public static String messageComposer(Codes code, String message)
     {
-        return new String(code.toString() + DELIMITER + message + "\n\r");
-
+        return new String(code.toString() + DELIMITER + message);
     }
 
     static class Message
     {
         GCP.Codes code;
-        List<String> payload;
+        List<String> payload = new ArrayList<>();
 
         public Message(GCP.Codes code, String payload)
         {
             this.code = code;
             StringTokenizer tokenizer = new StringTokenizer(payload, GCP.DELIMITER);
+            if (payload!=null)
             while (tokenizer.hasMoreTokens())
                 this.payload.add(tokenizer.nextToken());
         }

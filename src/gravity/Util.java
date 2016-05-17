@@ -1,12 +1,16 @@
 package gravity;
 
-public class Settings
+import java.util.List;
+
+public class Util
 {
     public static String localColor = "0x3F51B5";
     public static String remoteColor;
     public static String localUser;
     public static String remoteUser = "0xFF9800";
-    private static int movesCounter = 0;
+    public static String serverIP = "127.0.0.1";
+    public static int serverPort = 6969;
+    public static GCP gcp;
 
     public static int gravityMatrix[][] = {
             {0,0,0,0,0,0,0,0},
@@ -20,7 +24,6 @@ public class Settings
 
     public static void cellHandler(Cell c, boolean local)
     {
-        movesCounter++;
         switch (c.getGravity())
         {
             case 0:
@@ -99,7 +102,8 @@ public class Settings
                 c.setSelected(local);
                 break;
         }
-        searchWinner(c);
+        if (local)
+            GCP.writer.println(GCP.messageComposer(GCP.Codes.move, c.getX()+GCP.DELIMITER+c.getY()));
     }
 
     public static void applyGravity(Cell cell)
@@ -170,7 +174,12 @@ public class Settings
         return Integer.parseInt(String.valueOf(cell.getId().charAt(0)))*8+Integer.parseInt(String.valueOf(cell.getId().charAt(1)));
     }
 
-    public static void searchWinner(Cell c)
+    public static void paintCellService(List<String> payload)
     {
+        System.out.println(remoteColor);
+        int x = Integer.parseInt(payload.get(0));
+        int y = Integer.parseInt(payload.get(1));
+        cellHandler(Main.getController().getCellFromCoords(x,y), false);
+        System.out.println("cell "+x+"-"+y+" selected");
     }
 }
