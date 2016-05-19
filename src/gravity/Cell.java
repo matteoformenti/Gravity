@@ -30,7 +30,6 @@ public class Cell extends JFXButton
 
     public void setSelected(boolean local)
     {
-        System.out.println(this.getId()+" is now selected");
         this.setPadding(new Insets(-1));
         if (!local)
         {

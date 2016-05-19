@@ -1,6 +1,7 @@
 package gravity;
 
 import com.jfoenix.controls.*;
+import com.sun.javafx.font.freetype.HBGlyphLayout;
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIconView;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
@@ -12,8 +13,11 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.layout.*;
 import javafx.stage.Screen;
 
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+
+import static gravity.Main.getController;
 
 public class Controller
 {
@@ -32,8 +36,9 @@ public class Controller
     private double y;
     private boolean fullscreen = false;
     private List<Cell> cells = new ArrayList<>();
-    private Task<Void> serverListener;
     private JFXDialog waitingMatchDialog;
+    public boolean myTurn = false;
+
     /**
      * This method is called for components initialization
      */
@@ -65,11 +70,8 @@ public class Controller
      */
     public void close(ActionEvent actionEvent)
     {
-        System.out.println(serverListener.isRunning());
-        if (serverListener.isRunning())
-            serverListener.cancel();
         GCP.writer.println(GCP.messageComposer(GCP.Codes.exit, "null"));
-        Main.getStage().close();
+        System.exit(0);
     }
 
     public void resize(ActionEvent actionEvent)
@@ -163,6 +165,9 @@ public class Controller
 
     public void startMatchMaker()
     {
+        gridContainer.getChildren().remove(grid);
+        cells.removeAll(cells);
+        myTurn = false;
         GCP.writer.println(GCP.messageComposer(GCP.Codes.matchmaker, "null"));
         Task<Void> waitMatch = new Task<Void>()
         {
@@ -174,17 +179,18 @@ public class Controller
                     msg = GCP.decodeIncoming();
                 Util.remoteColor = msg.payload.get(1);
                 Util.remoteUser = msg.payload.get(0);
-                Main.getController().startMatch();
+                getController().startMatch();
                 return null;
             }
         };
         Thread matchWaiter = new Thread(waitMatch);
         matchWaiter.start();
+        Util.threads.add(matchWaiter);
     }
 
     public void startMatch()
     {
-        serverListener = new Task<Void>()
+        Task<Void> serverListener = new Task<Void>()
         {
             @Override
             protected Void call() throws Exception
@@ -194,6 +200,32 @@ public class Controller
                 {
                     if (msg.code.equals(GCP.Codes.move))
                         Util.paintCellService(msg.payload);
+                    if (msg.code.equals(GCP.Codes.match_over))
+                    {
+                        JFXDialog matchOverDialog = alertManager((msg.payload.get(0).equals(Util.localUser)?"You won!!!":"As expected: you lose!"),1);
+                        matchOverDialog.setOnDialogClosed((event) ->
+                        {
+                            JFXDialog dialog = new JFXDialog();
+                            JFXDialogLayout layout = new JFXDialogLayout();
+                            dialog.setContent(layout);
+                            layout.setBody(new Label("What's your next action?"));
+                            JFXButton b1 = new JFXButton("Close program");
+                            b1.setOnAction((e) -> getController().close(null));
+                            JFXButton b2 = new JFXButton("New match");
+                            b2.setOnAction((e) ->
+                            {
+                                waitingMatchDialog = loadingDialog("Waiting for a match", false);
+                                startMatchMaker();
+                                dialog.close();
+                            });
+                            HBox box = new HBox();
+                            box.getChildren().addAll(b1,b2);
+                            layout.setActions(box);
+                            dialog.setOverlayClose(false);
+                            dialog.setTransitionType(JFXDialog.DialogTransition.CENTER);
+                            Platform.runLater(() -> dialog.show(centerStackPane));
+                        });
+                    }
                     msg = Util.gcp.decodeIncoming();
                 }
                 return null;
@@ -201,12 +233,12 @@ public class Controller
         };
         Thread t = new Thread(serverListener);
         t.start();
+        Util.threads.add(t);
         waitingMatchDialog.close();
-        System.out.println("start match close");
-        Platform.runLater(() ->alertManager("You're in a match with "+ Util.remoteUser, 1));
-        System.out.println("start match alert manager");
+        if (Util.localUser.compareTo(Util.remoteUser)>0)
+            myTurn = true;
+        Platform.runLater(() ->alertManager("You're in a match with "+ Util.remoteUser+", "+((myTurn)?"It's your turn!":("It's "+Util.remoteUser+" turn")), 1));
         Platform.runLater(()->spawnBoard());
-        System.out.println("start match spawn board");
     }
 
     public List<Cell> getCells()
@@ -217,14 +249,18 @@ public class Controller
     public JFXDialog alertManager(String msg, int level)
     {
         JFXDialog alert = new JFXDialog();
-        JFXDialogLayout alertLayout = new JFXDialogLayout();
-        alert.setContent(alertLayout);
-        alertLayout.setBody(new Label(msg));
-        JFXButton closeAlert = new JFXButton("OK");
-        closeAlert.setOnAction((event -> alert.close()));
-        alertLayout.setActions(closeAlert);
-        alert.setTransitionType(JFXDialog.DialogTransition.CENTER);
-        alert.show(centerStackPane);
+        Platform.runLater(() ->
+        {
+            JFXDialogLayout alertLayout = new JFXDialogLayout();
+            alert.setContent(alertLayout);
+            alertLayout.setBody(new Label(msg));
+            JFXButton closeAlert = new JFXButton("OK");
+            closeAlert.setOnAction((event -> alert.close()));
+            alertLayout.setActions(closeAlert);
+            alert.setTransitionType(JFXDialog.DialogTransition.CENTER);
+            alert.show(centerStackPane);
+
+        });
         return alert;
     }
 
@@ -233,8 +269,9 @@ public class Controller
         JFXDialog loading = new JFXDialog();
         JFXDialogLayout loadingLayout = new JFXDialogLayout();
         loading.setContent(loadingLayout);
-        loadingLayout.setBody(new JFXSpinner());
-        loadingLayout.setHeading(new Label(msg));
+        VBox box = new VBox();
+        box.getChildren().addAll(new Label(msg), new JFXSpinner());
+        loadingLayout.setBody(box);
         loading.setOverlayClose(overlayClose);
         loading.setTransitionType(JFXDialog.DialogTransition.CENTER);
         loading.show(centerStackPane);

@@ -30,7 +30,8 @@ public class GCP
         match_error,        //opponent disconnection
         error,              //general error
         exit,               //disconnect from server
-        move
+        move,
+        match_yourTurn
     }
 
     public GCP()
@@ -53,7 +54,6 @@ public class GCP
         try
         {
             String in = reader.readLine();
-            System.out.println(in);
             tokenizer = new StringTokenizer(in, DELIMITER);
             Codes code = Codes.valueOf(tokenizer.nextToken());
             String s = "";

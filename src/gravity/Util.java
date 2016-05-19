@@ -1,5 +1,6 @@
 package gravity;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Util
@@ -11,6 +12,7 @@ public class Util
     public static String serverIP = "127.0.0.1";
     public static int serverPort = 6969;
     public static GCP gcp;
+    public static List<Thread> threads = new ArrayList<>();
 
     public static int gravityMatrix[][] = {
             {0,0,0,0,0,0,0,0},
@@ -24,86 +26,95 @@ public class Util
 
     public static void cellHandler(Cell c, boolean local)
     {
-        switch (c.getGravity())
+        if (Main.getController().myTurn || !local)
         {
-            case 0:
-                c.setSelected(local);
-                break;
-            case 1:
-                while (c.getGravity() != 0)
-                {
-                    if (top(c).isSelected())
-                        break;
-                    c = top(c);
-                }
-                c.setSelected(local);
-                break;
-            case 2:
-                while (c.getGravity() != 0)
-                {
-                    if (bottom(c).isSelected())
-                        break;
-                    c = bottom(c);
-                }
-                c.setSelected(local);
-                break;
-            case 3:
-                while (c.getGravity() != 0)
-                {
-                    if (right(c).isSelected())
-                        break;
-                    c = right(c);
-                }
-                c.setSelected(local);
-                break;
-            case 4:
-                while (c.getGravity() != 0)
-                {
-                    if (left(c).isSelected())
-                        break;
-                    c = left(c);
-                }
-                c.setSelected(local);
-                break;
-            case 5:
-                while (c.getGravity() != 0)
-                {
-                    if (topLeft(c).isSelected())
-                        break;
-                    c = topLeft(c);
-                }
-                c.setSelected(local);
-                break;
-            case 6:
-                while (c.getGravity() != 0)
-                {
-                    if (topRight(c).isSelected())
-                        break;
-                    c = topRight(c);
-                }
-                c.setSelected(local);
-                break;
-            case 7:
-                while (c.getGravity() != 0)
-                {
-                    if (bottomRight(c).isSelected())
-                        break;
-                    c = bottomRight(c);
-                }
-                c.setSelected(local);
-                break;
-            case 8:
-                while (c.getGravity() != 0)
-                {
-                    if (bottomLeft(c).isSelected())
-                        break;
-                    c = bottomLeft(c);
-                }
-                c.setSelected(local);
-                break;
+            switch (c.getGravity())
+            {
+                case 0:
+                    c.setSelected(local);
+                    break;
+                case 1:
+                    while (c.getGravity() != 0)
+                    {
+                        if (top(c).isSelected())
+                            break;
+                        c = top(c);
+                    }
+                    c.setSelected(local);
+                    break;
+                case 2:
+                    while (c.getGravity() != 0)
+                    {
+                        if (bottom(c).isSelected())
+                            break;
+                        c = bottom(c);
+                    }
+                    c.setSelected(local);
+                    break;
+                case 3:
+                    while (c.getGravity() != 0)
+                    {
+                        if (right(c).isSelected())
+                            break;
+                        c = right(c);
+                    }
+                    c.setSelected(local);
+                    break;
+                case 4:
+                    while (c.getGravity() != 0)
+                    {
+                        if (left(c).isSelected())
+                            break;
+                        c = left(c);
+                    }
+                    c.setSelected(local);
+                    break;
+                case 5:
+                    while (c.getGravity() != 0)
+                    {
+                        if (topLeft(c).isSelected())
+                            break;
+                        c = topLeft(c);
+                    }
+                    c.setSelected(local);
+                    break;
+                case 6:
+                    while (c.getGravity() != 0)
+                    {
+                        if (topRight(c).isSelected())
+                            break;
+                        c = topRight(c);
+                    }
+                    c.setSelected(local);
+                    break;
+                case 7:
+                    while (c.getGravity() != 0)
+                    {
+                        if (bottomRight(c).isSelected())
+                            break;
+                        c = bottomRight(c);
+                    }
+                    c.setSelected(local);
+                    break;
+                case 8:
+                    while (c.getGravity() != 0)
+                    {
+                        if (bottomLeft(c).isSelected())
+                            break;
+                        c = bottomLeft(c);
+                    }
+                    c.setSelected(local);
+                    break;
+            }
+            Main.getController().myTurn = true;
+            if (local)
+            {
+                GCP.writer.println(GCP.messageComposer(GCP.Codes.move, c.getX() + GCP.DELIMITER + c.getY()));
+                Main.getController().myTurn = false;
+            }
         }
-        if (local)
-            GCP.writer.println(GCP.messageComposer(GCP.Codes.move, c.getX()+GCP.DELIMITER+c.getY()));
+        else
+            Main.getController().alertManager("It is not your turn!!! Stop clicking this ****** table!!! ",1);
     }
 
     public static void applyGravity(Cell cell)
@@ -176,10 +187,8 @@ public class Util
 
     public static void paintCellService(List<String> payload)
     {
-        System.out.println(remoteColor);
         int x = Integer.parseInt(payload.get(0));
         int y = Integer.parseInt(payload.get(1));
         cellHandler(Main.getController().getCellFromCoords(x,y), false);
-        System.out.println("cell "+x+"-"+y+" selected");
     }
 }
