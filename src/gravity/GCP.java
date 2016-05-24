@@ -1,11 +1,11 @@
 package gravity;
 
+import com.jfoenix.controls.JFXDialog;
+import javafx.application.Platform;
+
 import java.io.*;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.StringTokenizer;
 
 /**
  * Gravity communication protocol manager
@@ -15,7 +15,8 @@ public class GCP
     public static Socket server;
     public static PrintWriter writer;
     public static BufferedReader reader;
-
+    public static NetworkListener networkListener;
+    public static Thread nlThread;
     public static final String DELIMITER = "|";
 
     enum Codes
@@ -31,85 +32,89 @@ public class GCP
         error,              //general error
         exit,               //disconnect from server
         move,
-        match_yourTurn
+        turn
     }
 
-    public GCP()
+    public static void loginOk()
+    {
+        Main.getController().dialog.close();
+        writer.println(messageComposer(Codes.matchmaker, "null"));
+    }
+
+    public static void loginUsr()
+    {
+        Main.getController().dialogs.stream().filter(dialog -> dialog.getId().equals("login-dialog")).forEach(JFXDialog::close);
+        Main.getController().dialogManager("This username is already in use! Choose another one!", true);
+    }
+
+    public static void matchmakerQueue()
+    {
+        Platform.runLater(() -> Main.getController().dialogs.add(Main.getController().loadingDialog("Waiting for an opponent", "queue-dialog", false)));
+    }
+
+    public static void match(Message m)
+    {
+        Platform.runLater(() ->
+        {
+            Main.getController().dialogs.stream().filter(d -> d.getId() != null).filter(d -> d.getId().equals("queue-dialog")).forEach(JFXDialog::close);
+            Main.getController().spawnBoard();
+            Util.remoteUser = m.getPayload().get(0);
+            Util.remoteColor = (Util.localColor.equals(m.getPayload().get(1)) ? ("#212121") : m.getPayload().get(1));
+            Main.getController().dialogManager("You're in a match against " + Util.remoteUser, true);
+        });
+    }
+
+    public static void matchOver(Message m)
+    {
+        Main.getController().myTurn = false;
+        Platform.runLater(() -> Main.getController().matchOverDialog("The match is over, obviously the winner is "+((m.getPayload().get(0).equals(Util.localUser))?"you!":Util.remoteUser)+". What's your next move?", "match_over"));
+    }
+
+    public static void matchError(Message m)
+    {
+        System.out.println("MATCH_ERROR");
+    }
+
+    public static void error(Message m)
+    {
+        System.out.println("ERROR");
+    }
+
+    public static void move(Message m)
+    {
+        Util.cellPainter(m.getPayload());
+        Main.getController().myTurn = true;
+    }
+
+    public static void sendMove(int x, int y)
+    {
+        GCP.writer.println(GCP.messageComposer(GCP.Codes.move, x + GCP.DELIMITER + y));
+        Main.getController().myTurn = false;
+    }
+
+    public static void turn(Message m)
+    {
+        Platform.runLater(() ->
+        {Main.getController().myTurn = false;
+        if(m.getPayload().get(0).equals(Util.localUser))
+            Main.getController().myTurn = true;
+        Main.getController().dialogManager((Main.getController().myTurn)?"It's your turn!":("It's "+Util.remoteUser+"'s turn"), true);
+        });
+    }
+
+    public static void startGCP()
     {
         try
         {
             server = new Socket(Util.serverIP, Util.serverPort);
             writer = new PrintWriter(server.getOutputStream(), true);
             reader = new BufferedReader(new InputStreamReader(server.getInputStream()));
-        } catch (UnknownHostException e)
-        {
-        } catch (IOException e)
-        {
+            networkListener = new NetworkListener();
+            nlThread = new Thread(networkListener);
+            nlThread.start();
         }
-    }
-
-    public static Message decodeIncoming()
-    {
-        StringTokenizer tokenizer = null;
-        try
-        {
-            String in = reader.readLine();
-            tokenizer = new StringTokenizer(in, DELIMITER);
-            Codes code = Codes.valueOf(tokenizer.nextToken());
-            String s = "";
-            while (tokenizer.hasMoreTokens())
-                s+=tokenizer.nextToken()+DELIMITER;
-            return new Message(code, s);
-        } catch (IOException e)
-        {
-            return null;
-        }
-
-//        switch (Codes.valueOf(tokenizer.nextToken()))
-//        {
-//            case login_ok:
-//                Main.getController().dialog.close();
-//                break;
-//            case login_usr:
-//                Main.getController().alertManager("Heheheh we found you! You tried to steal a username, use another one!", 3);
-//                break;
-//            case matchmaker:
-//                break;
-//            case matchmaker_queue:
-//                Main.getController().alertManager("You're in queue for a match!", 4);
-//                break;
-//            case match:
-//                Main.getController().alertManager("Your opponent is...", 4);
-//                break;
-//            case match_over:
-//                Main.getController().alertManager("Yeahhhhhhh the match is ovaaaarrr, guess who's the winner... obviously ", 1);
-//                break;
-//            case match_error:
-//                Main.getController().alertManager("Your opponent was too scared of you and decided to give up, congratulations, you won!", 2);
-//                break;
-//            case error:
-//                Main.getController().alertManager("There's a problem somewhere, but there's also something you can do! Ask someone to debug everything for you! [Or just find a better game]", 3);
-//                break;
-//            default:
-//                Main.getController().alertManager("Something went wrong, but the cow has no freaking idea of what's the problem, try eating a potato and reboot the world [BTW: congratulations, you managed" +
-//                        "to break the whole game, that's really impressive!]", 4);
-//                break;
-//        }
-    }
-
-    public static int login()
-    {
-        if (writer == null || reader == null)
-            return -3;
-        writer.println(messageComposer(Codes.login, (Util.localUser + "|" + Util.localColor)));
-        Message m = decodeIncoming();
-        if (m == null)
-            return -3;
-        if (m.code.equals(Codes.login_ok))
-            return 1;
-        if (m.code.equals(Codes.login_usr))
-            return -1;
-        return -2;
+        catch (UnknownHostException e){}
+        catch (IOException e){}
     }
 
     public static String messageComposer(Codes code, String message)
@@ -117,18 +122,11 @@ public class GCP
         return new String(code.toString() + DELIMITER + message);
     }
 
-    static class Message
+    public static void login() // to server
     {
-        GCP.Codes code;
-        List<String> payload = new ArrayList<>();
-
-        public Message(GCP.Codes code, String payload)
-        {
-            this.code = code;
-            StringTokenizer tokenizer = new StringTokenizer(payload, GCP.DELIMITER);
-            if (payload!=null)
-            while (tokenizer.hasMoreTokens())
-                this.payload.add(tokenizer.nextToken());
-        }
+        if (writer == null || reader == null)
+            Main.getController().dialogManager("Looks like the server isn't responding...", false);
+        else
+            writer.println(messageComposer(Codes.login, (Util.localUser + "|" + Util.localColor)));
     }
 }
