@@ -1,0 +1,10 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="Gravity">
+    <output-path>$PROJECT_DIR$/out/artifacts/Gravity</output-path>
+    <root id="archive" name="Gravity.jar">
+      <element id="module-output" name="Gravity" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../../GravityGradle/lib/fontawesomefx-8.9.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../../GravityGradle/lib/jfoenix.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>
